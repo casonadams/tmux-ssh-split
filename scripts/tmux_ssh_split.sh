@@ -1,47 +1,10 @@
 #!/usr/bin/env bash
 
-set -e
-set -x
+_tmux_ssh_split_uname_s=$(uname -s)
 
-unset GREP_OPTIONS
-export LC_NUMERIC=C
-
-_uname_s=$(uname -s)
-
-_is_true() {
-  [ x"$1" = x"true" ] || [ x"$1" = x"yes" ] || [ x"$1" = x"1" ]
-}
-
-if command -v pkill > /dev/null 2>&1; then
-  _pkillf() {
-    pkill -f "$@" || true
-  }
-else
-  case "$_uname_s" in
-    *CYGWIN*)
-      _pkillf() {
-        while IFS= read -r pid; do
-          kill "$pid" || true
-        done << EOF
-$(grep -Eao "$@" /proc/*/cmdline | xargs -0 | sed -E -n 's,/proc/([0-9]+)/.+$,\1,pg')
-EOF
-      }
-      ;;
-    *)
-      _pkillf() {
-        while IFS= read -r pid; do
-          kill "$pid" || true
-        done << EOF
-$(ps -x -o pid= -o command= | grep -E "$@" | cut -d' ' -f1)
-EOF
-      }
-      ;;
-  esac
-fi
-
-_tty_info() {
+_tmux_ssh_split_tty_info() {
   tty="${1##/dev/}"
-  case "$_uname_s" in
+  case "$_tmux_ssh_split_uname_s" in
     *CYGWIN*)
       ps -al | tail -n +2 | awk -v tty="$tty" '
         ((/ssh/ && !/-W/) || !/ssh/) && $5 == tty {
@@ -90,84 +53,11 @@ _tty_info() {
   esac
 }
 
-_ssh_or_mosh_args() {
-  case "$1" in
-    *ssh*)
-      args=$(printf '%s' "$1" | perl -n -e 'print if s/(.*?)\bssh\b\s+(.*)/\2/')
-      ;;
-    *mosh-client*)
-      args=$(printf '%s' "$1" | sed -E -e 's/.*mosh-client -# (.*)\|.*$/\1/' -e 's/-[^ ]*//g' -e 's/\d:\d//g')
-      ;;
-  esac
-
-  printf '%s' "$args"
-}
-
-_username() {
-  tty=${1:-$(tmux display -p '#{s,/dev/,,:pane_tty}')}
-  ssh_only=$2
-
-  tty_info=$(_tty_info "$tty")
-  command=${tty_info#*:}
-  command=${command#*:}
-
-  ssh_or_mosh_args=$(_ssh_or_mosh_args "$command")
-  if [ -n "$ssh_or_mosh_args" ]; then
-    # shellcheck disable=SC2086
-    username=$(ssh -G $ssh_or_mosh_args 2> /dev/null | awk '/^user / { print $2; exit }')
-    # shellcheck disable=SC2086
-    [ -z "$username" ] && username=$(ssh -T -o ControlPath=none -o ProxyCommand="sh -c 'echo %%username%% %r >&2'" $ssh_or_mosh_args 2>&1 | awk '/^%username% / { print $2; exit }')
-  else
-    if ! _is_true "$ssh_only"; then
-      username=${tty_info#*:}
-      username=${username%%:*}
-    fi
-  fi
-
-  printf '%s\n' "$username"
-}
-
-_hostname() {
-  tty=${1:-$(tmux display -p '#{s,/dev/,,:pane_tty}')}
-  ssh_only=$2
-  full=$3
-  h_or_H=$4
-
-  tty_info=$(_tty_info "$tty")
-  command=${tty_info#*:}
-  command=${command#*:}
-
-  ssh_or_mosh_args=$(_ssh_or_mosh_args "$command")
-  if [ -n "$ssh_or_mosh_args" ]; then
-    # shellcheck disable=SC2086
-    hostname=$(ssh -G $ssh_or_mosh_args 2> /dev/null | awk '/^hostname / { print $2; exit }')
-    # shellcheck disable=SC2086
-    [ -z "$hostname" ] && hostname=$(ssh -T -o ControlPath=none -o ProxyCommand="sh -c 'echo %%hostname%% %h >&2'" $ssh_or_mosh_args 2>&1 | awk '/^%hostname% / { print $2; exit }')
-
-    if ! _is_true "$full"; then
-      case "$hostname" in
-        *[a-z-].*)
-          hostname=${hostname%%.*}
-          ;;
-        127.0.0.1)
-          hostname="localhost"
-          ;;
-      esac
-    fi
-  else
-    if ! _is_true "$ssh_only"; then
-      hostname="$h_or_H"
-    fi
-  fi
-
-  printf '%s\n' "$hostname"
-}
-
-_split_window_ssh() {
+function _tmux_ssh_split() {
   direction=${1:-'-h')}
   tty=${2:-$(tmux display -p '#{s,/dev/,,:pane_tty}')}
 
-  tty_info=$(_tty_info "$tty")
+  tty_info=$(_tmux_ssh_split_tty_info "$tty")
   command=${tty_info#*:}
   command=${command#*:}
 
@@ -177,13 +67,13 @@ _split_window_ssh() {
       tmux split-window "$direction" mosh $(echo "$command" | sed -E -e 's/.*mosh-client -# (.*)\|.*$/\1/')
       ;;
     *ssh*)
-      # shellcheck disable=SC2046
-      tmux split-window "$direction" $(echo "$command" | sed -e 's/;/\\;/g')
+      # shellcheck disable=SC2001
+      tmux split-window "$direction" "$(echo "$command" | sed -e 's/;/\\;/g')"
       ;;
     *)
-      tmux split-window "$direction"
+      tmux split-window "$direction" -c "#{pane_current_path}"
       ;;
   esac
 }
 
-_split_window_ssh "$@"
+_tmux_ssh_split_uname_s "$@"
