@@ -28,7 +28,7 @@ run -b '~/.tmux/plugins/tpm/tpm'
 
 tmux-ssh-split isn't very configurable yet.
 
-| command    | description      |
-| ---------- | ---------------- |
-| prefix '%' | split horizontal |
-| prefix '"' | split vertical   |
+| command  | description      |
+| -------- | ---------------- |
+| prefix % | split horizontal |
+| prefix " | split vertical   |
