@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
+set -x
 
 unset GREP_OPTIONS
 export LC_NUMERIC=C
