@@ -14,9 +14,10 @@ Should work with `ssh` and `mosh` connections.
 if "test ! -d ~/.tmux/plugins/tpm" \
    "run 'git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm && ~/.tmux/plugins/tpm/bin/install_plugins'"
 
-set -g @plugin 'soyuka/tmux-current-pane-hostname'
-set -g @plugin 'tmux-plugins/tmux-yank'
 set -g @plugin 'casonadams/tmux-ssh-split'
+
+# other tmp plugins
+# ...
 
 run -b '~/.tmux/plugins/tpm/tpm'
 ```
