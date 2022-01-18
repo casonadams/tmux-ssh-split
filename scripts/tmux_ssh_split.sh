@@ -2,7 +2,7 @@
 
 _tmux_ssh_split_uname_s=$(uname -s)
 
-_tmux_ssh_split_tty_info() {
+function _tmux_ssh_split_tty_info() {
   tty="${1##/dev/}"
   case "$_tmux_ssh_split_uname_s" in
     *CYGWIN*)
@@ -76,4 +76,4 @@ function _tmux_ssh_split() {
   esac
 }
 
-_tmux_ssh_split_uname_s "$@"
+_tmux_ssh_split "$@"
