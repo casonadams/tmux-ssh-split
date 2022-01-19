@@ -6,7 +6,7 @@ unset GREP_OPTIONS
 export LC_NUMERIC=C
 
 function _tmux_ssh_split_tty_info() {
-  local tty="${1##/dev/}"
+  tty="${1##/dev/}"
   case "$(uname -s)" in
     *CYGWIN*)
       ps -al | tail -n +2 | awk -v tty="$tty" '
@@ -55,9 +55,8 @@ function _tmux_ssh_split_tty_info() {
 }
 
 function _tmux_ssh_split() {
-  local direction=${1:-'-h')}
-  local tty=${2:-$(tmux display -p '#{s,/dev/,,:pane_tty}')}
-  local tty_info command
+  direction=${1:-'-h')}
+  tty=${2:-$(tmux display -p '#{s,/dev/,,:pane_tty}')}
 
   tty_info=$(_tmux_ssh_split_tty_info "$tty")
   command=${tty_info#*:}

@@ -7,7 +7,7 @@ split_bind_horizontal='%'
 split_bind_horizontal_option="@split_bind_horizontal"
 
 # helper functions
-get_tmux_option() {
+function get_tmux_option() {
   local option="$1"
   local default_value="$2"
   local option_value
@@ -19,10 +19,10 @@ get_tmux_option() {
   fi
 }
 
-split_bind_vertical_key() {
+function split_bind_vertical_key() {
   get_tmux_option "$split_bind_horizontal_option" "$split_bind_horizontal"
 }
 
-split_bind_horizontal_key() {
+function split_bind_horizontal_key() {
   get_tmux_option "$split_bind_vertical_option" "$split_bind_vertical"
 }
