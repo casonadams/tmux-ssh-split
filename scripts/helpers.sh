@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-split_bind_vertical='"'
+split_bind_vertical='%'
 split_bind_vertical_option="@split_bind_vertical"
 
-split_bind_horizontal='%'
+split_bind_horizontal='"'
 split_bind_horizontal_option="@split_bind_horizontal"
 
 # helper functions
