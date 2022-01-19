@@ -5,11 +5,9 @@ set -e
 unset GREP_OPTIONS
 export LC_NUMERIC=C
 
-_tmux_ssh_split_uname=$(uname -s)
-
 function _tmux_ssh_split_tty_info() {
-  tty="${1##/dev/}"
-  case "$_tmux_ssh_split_uname" in
+  local tty="${1##/dev/}"
+  case "$(uname -s)" in
     *CYGWIN*)
       ps -al | tail -n +2 | awk -v tty="$tty" '
         ((/ssh/ && !/-W/) || !/ssh/) && $5 == tty {
@@ -57,8 +55,9 @@ function _tmux_ssh_split_tty_info() {
 }
 
 function _tmux_ssh_split() {
-  direction=${1:-'-h')}
-  tty=${2:-$(tmux display -p '#{s,/dev/,,:pane_tty}')}
+  local direction=${1:-'-h')}
+  local tty=${2:-$(tmux display -p '#{s,/dev/,,:pane_tty}')}
+  local tty_info command
 
   tty_info=$(_tmux_ssh_split_tty_info "$tty")
   command=${tty_info#*:}
@@ -70,7 +69,7 @@ function _tmux_ssh_split() {
       tmux split-window "$direction" mosh $(echo "$command" | sed -E -e 's/.*mosh-client -# (.*)\|.*$/\1/')
       ;;
     *ssh*)
-      # shellcheck disable=SC2046
+      # shellcheck disable=SC2001,SC2046
       tmux split-window "$direction" $(echo "$command" | sed -e 's/;/\\;/g')
       ;;
     *)
